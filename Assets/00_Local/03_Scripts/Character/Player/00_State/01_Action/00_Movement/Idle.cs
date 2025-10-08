@@ -15,10 +15,6 @@ namespace PlayerState // 名前空間を定義
         public void Enter()
         {
             Debug.Log("State: Idleに入りました。");
-
-            // 修正点 1: Input Systemの Confirm アクションイベントを購読
-            // ※ 画像に基づき、攻撃/アクションには 'Confirm' アクションを使用
-            _owner.InputHandler.Confirm.performed += OnConfirmInput;
         }
 
         public void Update()

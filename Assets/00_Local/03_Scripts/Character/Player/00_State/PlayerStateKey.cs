@@ -8,6 +8,7 @@ public enum PlayerStateKey : byte
 {
     Idle,
     Run,
+    Jump,
     Attack,
     Dodge
 }

@@ -43,10 +43,14 @@ public class StateMachine<T, K>
         }
     }
 
-    // メインの処理ループで呼び出す
     public void Update()
     {
         _currentState?.Update();
+    }
+
+    public void LateUpdate()
+    {
+        _currentState?.LateUpdate();
     }
 
     /**
