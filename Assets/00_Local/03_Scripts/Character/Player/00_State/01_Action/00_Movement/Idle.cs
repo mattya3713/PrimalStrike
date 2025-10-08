@@ -1,21 +1,57 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem; // InputSystemの型（InputAction.CallbackContext）のために必要
 
-namespace PlayerState
+namespace PlayerState // 名前空間を定義
 {
-    public class Idle : MonoBehaviour
+    public class Idle : IState // IStateインターフェースの実装を前提
     {
-        // Start is called before the first frame update
-        void Start()
-        {
+        private PlayerController _owner;
 
+        public Idle(PlayerController owner)
+        {
+            _owner = owner;
         }
 
-        // Update is called once per frame
-        void Update()
+        public void Enter()
         {
+            Debug.Log("State: Idleに入りました。");
 
+            // 修正点 1: Input Systemの Confirm アクションイベントを購読
+            // ※ 画像に基づき、攻撃/アクションには 'Confirm' アクションを使用
+            _owner.InputHandler.Confirm.performed += OnConfirmInput;
+        }
+
+        public void Update()
+        {
+            // 修正点 2: 移動入力の有無をチェック
+            // InputHandler.Moveアクションから現在の移動値をポーリングで取得
+            Vector2 moveInput = _owner.InputHandler.Move.ReadValue<Vector2>();
+
+            if (moveInput.magnitude > 0.1f)
+            {
+                // 移動入力があった場合、Runステートへ遷移
+                _owner.SwitchState(PlayerStateKey.Run);
+            }
+        }
+
+        public void LateUpdate()
+        {
+            // LateUpdateはカメラやアニメーションなど特殊な用途に使うため、ここでは何もしない
+        }
+
+        public void Exit()
+        {
+            Debug.Log("State: Idleを抜けました。");
+
+            // 購読解除（重要！）
+            _owner.InputHandler.Confirm.performed -= OnConfirmInput;
+        }
+
+        // --- イベント駆動で呼び出されるメソッド ---
+        private void OnConfirmInput(InputAction.CallbackContext context)
+        {
+            // Confirm（攻撃）ボタンが押されたら、Attackステートに遷移
+            _owner.SwitchState(PlayerStateKey.Attack);
         }
     }
-}　// PlayerState.
+}
