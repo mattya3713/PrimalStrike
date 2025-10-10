@@ -11,9 +11,9 @@ public interface IState
 }
 
 /**
- * 汎用的なステートマシンクラス。
- * T はステートマシンの所有者（Player、Enemyなど）の型を定義する。
- * K はステートのEnumやTypeなどのキーの型を定義する。
+ * 汎用的なステートマシンクラス.
+ * T はステートマシンの所有者（Player、Enemyなど）の型を定義する.
+ * K はステートのEnumやTypeなどのキーの型を定義する.
  */
 public class StateMachine<T, K>
 {

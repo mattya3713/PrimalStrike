@@ -1,47 +1,50 @@
-// PlayerController.cs
+ï»¿// PlayerController.cs
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static MainInput; // MainInputƒNƒ‰ƒX‚Ì’¼Ú—˜—p‚ğ‹–‰Â
-using PlayerState; // PlayerState–¼‘O‹óŠÔ‚ğg—p
+using static MainInput; // MainInputã‚¯ãƒ©ã‚¹ã®ç›´æ¥åˆ©ç”¨ã‚’è¨±å¯
+using PlayerState; // PlayerStateåå‰ç©ºé–“ã‚’ä½¿ç”¨
 
 public class PlayerController : MonoBehaviour
 {
-    // Š—LÒT: PlayerController, ƒL[K: PlayerStateKey
+    // æ‰€æœ‰è€…T: PlayerController, ã‚­ãƒ¼K: PlayerStateKey
     private StateMachine<PlayerController, PlayerStateKey> _stateMachine;
 
-    private MainInput _inputActions;
-    public BasicActions InputHandler { get; private set; } // BasicActions‚ğŒöŠJ
+    private CameraFollow _mainCamera;
 
-    [Header("-----‘Ò‹@ƒXƒe[ƒg-----")]
+    // å…¥åŠ›ã‚¤ãƒ™ãƒ³ãƒˆ.
+    private MainInput _inputActions;
+    public BasicActions InputHandler { get; private set; }
+
+    [Header("-----å¾…æ©Ÿã‚¹ãƒ†ãƒ¼ãƒˆ-----")]
     [SerializeField] private float _idleAnimationStartTime = 3f;
     public float idleAnimationStartTime{ get; private set; }
 
-    [Header("-----•à‚«ƒXƒe[ƒg-----")]
+    [Header("-----æ­©ãã‚¹ãƒ†ãƒ¼ãƒˆ-----")]
     [SerializeField] private float moveSpeed = 5.0f;
 
-    [Header("-----‘–‚èƒXƒe[ƒg-----")]
-    [SerializeField] private float jumpPower = 7.0f; // ƒWƒƒƒ“ƒv—Í‚ğŒöŠJ
+    [Header("-----èµ°ã‚Šã‚¹ãƒ†ãƒ¼ãƒˆ-----")]
+    [SerializeField] private float jumpPower = 7.0f; // ã‚¸ãƒ£ãƒ³ãƒ—åŠ›ã‚’å…¬é–‹
 
-    // CharacterController‚ğƒvƒ‰ƒCƒx[ƒg‚ÆƒpƒuƒŠƒbƒN‚Å•ÛiƒvƒƒpƒeƒBŒo—R‚ÅƒAƒNƒZƒXj
+    // CharacterControllerã‚’ãƒ—ãƒ©ã‚¤ãƒ™ãƒ¼ãƒˆã¨ãƒ‘ãƒ–ãƒªãƒƒã‚¯ã§ä¿æŒï¼ˆãƒ—ãƒ­ãƒ‘ãƒ†ã‚£çµŒç”±ã§ã‚¢ã‚¯ã‚»ã‚¹ï¼‰
     private CharacterController _characterController;
     public CharacterController CharacterController => _characterController;
     public float MoveSpeed => moveSpeed;
-    public float JumpPower => jumpPower; // JumpƒXƒe[ƒg‚Åg—p‚·‚é‚½‚ßŒöŠJ
+    public float JumpPower => jumpPower; // Jumpã‚¹ãƒ†ãƒ¼ãƒˆã§ä½¿ç”¨ã™ã‚‹ãŸã‚å…¬é–‹
 
     void Awake()
     {
         _inputActions = new MainInput();
         InputHandler = _inputActions.Basic;
 
-        // 1. ƒXƒe[ƒgƒ}ƒVƒ“‚Ì‰Šú‰»
+        // ã‚¹ãƒ†ãƒ¼ãƒˆãƒã‚·ãƒ³ã®åˆæœŸåŒ–.
         _stateMachine = new StateMachine<PlayerController, PlayerStateKey>(this);
 
-        // ŠeƒXƒe[ƒg‚Ì“o˜^
+        // å„ã‚¹ãƒ†ãƒ¼ãƒˆã®ç™»éŒ².
         _stateMachine.AddState(PlayerStateKey.Idle, new Idle(this));
         _stateMachine.AddState(PlayerStateKey.Run, new Run(this));
         _stateMachine.AddState(PlayerStateKey.Attack, new Attack(this));
-        _stateMachine.AddState(PlayerStateKey.Jump, new Jump(this)); // JumpƒXƒe[ƒg‚ğ’Ç‰Á
+        _stateMachine.AddState(PlayerStateKey.Jump, new Jump(this)); // Jumpã‚¹ãƒ†ãƒ¼ãƒˆã‚’è¿½åŠ 
 
         _characterController = GetComponent<CharacterController>();
     }
@@ -50,12 +53,11 @@ public class PlayerController : MonoBehaviour
     {
         _inputActions.Enable();
         InputHandler.Enable();
+        InputHandler.Confirm.performed += OnJumpInput;
 
-        // ƒWƒƒƒ“ƒv“ü—ÍƒCƒxƒ“ƒg‚Ìw“ÇiStart()‚âAwake()‚Åˆê“x‚¾‚¯s‚¤j
-        // ¦ JumpƒAƒNƒVƒ‡ƒ“‚ªBasicƒ}ƒbƒv“à‚É‚ ‚é‚Æ‰¼’è
-        InputHandler.Confirm.performed += OnJumpInput; // ¡‰ñ‚ÍConfirm‚ğƒWƒƒƒ“ƒv‚É‚àg‚¤‚Æ‰¼’è
+        _mainCamera = GameObject.Find("MainCamera").gameObject.GetComponent<CameraFollow>();
 
-        // 3. ‰ŠúƒXƒe[ƒg‚ğİ’è
+        // 3. åˆæœŸã‚¹ãƒ†ãƒ¼ãƒˆã‚’è¨­å®š
         _stateMachine.SwitchState(PlayerStateKey.Idle);
     }
 
@@ -71,44 +73,46 @@ public class PlayerController : MonoBehaviour
         _stateMachine.LateUpdate(); 
 
         HandleMovementAndTransition();
+
+        _mainCamera.UpdateCamera();
     }
 
     private void HandleMovementAndTransition()
     {
-        // Z•ûŒü‚àg‚¤3D‹óŠÔ‚Å‚ÌˆÚ“®ƒxƒNƒgƒ‹‚É•ÏŠ·
+        // Zæ–¹å‘ã‚‚ä½¿ã†3Dç©ºé–“ã§ã®ç§»å‹•ãƒ™ã‚¯ãƒˆãƒ«ã«å¤‰æ›
         Vector2 input = InputHandler.Move.ReadValue<Vector2>();
         Vector3 movement = new Vector3(input.x, 0, input.y);
 
-        // 1. ˆÚ“®‚Ì—L–³‚ğ”»’f
+        // 1. ç§»å‹•ã®æœ‰ç„¡ã‚’åˆ¤æ–­
         bool isMoving = movement.magnitude > 0.1f;
 
-        // 2. •¨—“I‚ÈˆÚ“®ˆ—iIdle/RunƒXƒe[ƒg‚Å‚Ì‚İA‚±‚±‚Å’¼ÚÀsj
-        // Jump/AttackƒXƒe[ƒg‚Å‚ÍƒXƒe[ƒg“à‚Åd—Í‚âƒAƒjƒ[ƒVƒ‡ƒ“l—¶‚ÌˆÚ“®‚ğs‚¤‚½‚ßAœŠO‚·‚é
+        // 2. ç‰©ç†çš„ãªç§»å‹•å‡¦ç†ï¼ˆIdle/Runã‚¹ãƒ†ãƒ¼ãƒˆã§ã®ã¿ã€ã“ã“ã§ç›´æ¥å®Ÿè¡Œï¼‰
+        // Jump/Attackã‚¹ãƒ†ãƒ¼ãƒˆã§ã¯ã‚¹ãƒ†ãƒ¼ãƒˆå†…ã§é‡åŠ›ã‚„ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³è€ƒæ…®ã®ç§»å‹•ã‚’è¡Œã†ãŸã‚ã€é™¤å¤–ã™ã‚‹
         bool isGroundState = _stateMachine.CurrentState is Idle || _stateMachine.CurrentState is Run;
 
         if (isGroundState)
         {
-            // ’n–Ê‚É‚¢‚éŠÔ‚ÌˆÚ“®ˆ—
+            // åœ°é¢ã«ã„ã‚‹é–“ã®ç§»å‹•å‡¦ç†
             CharacterController.Move(movement * moveSpeed * Time.deltaTime);
 
-            // ‘JˆÚ”»’f
+            // é·ç§»åˆ¤æ–­
             if (isMoving && _stateMachine.CurrentState is Idle)
             {
-                SwitchState(PlayerStateKey.Run); // Idle ¨ Run
+                SwitchState(PlayerStateKey.Run); // Idle â†’ Run
             }
             else if (!isMoving && _stateMachine.CurrentState is Run)
             {
-                SwitchState(PlayerStateKey.Idle); // Run ¨ Idle
+                SwitchState(PlayerStateKey.Idle); // Run â†’ Idle
             }
         }
-        // Jump/AttackƒXƒe[ƒg‚Å‚ÍA‚±‚Ìƒƒ\ƒbƒh‚Í‘JˆÚ”»’è‚Ì‚İ‚Ég‚¤‚©A
-        // ˆ—‚ğƒXƒe[ƒgƒNƒ‰ƒX‚ÌUpdate()‚ÉŠ®‘S‚ÉˆÏ÷‚µ‚Ü‚·B
+        // Jump/Attackã‚¹ãƒ†ãƒ¼ãƒˆã§ã¯ã€ã“ã®ãƒ¡ã‚½ãƒƒãƒ‰ã¯é·ç§»åˆ¤å®šã®ã¿ã«ä½¿ã†ã‹ã€
+        // å‡¦ç†ã‚’ã‚¹ãƒ†ãƒ¼ãƒˆã‚¯ãƒ©ã‚¹ã®Update()ã«å®Œå…¨ã«å§”è­²ã—ã¾ã™ã€‚
     }
 
-    // --- ƒCƒxƒ“ƒg‹ì“®‚ÌƒWƒƒƒ“ƒv“ü—Íˆ— ---
+    // --- ã‚¤ãƒ™ãƒ³ãƒˆé§†å‹•ã®ã‚¸ãƒ£ãƒ³ãƒ—å…¥åŠ›å‡¦ç† ---
     public void OnJumpInput(InputAction.CallbackContext context)
     {
-        // Œ»İAIdle‚Ü‚½‚ÍRunƒXƒe[ƒg‚Å‚ ‚èA‚©‚Â’n–Ê‚É‚¢‚éê‡‚Ì‚İƒWƒƒƒ“ƒv‚ğ‹–‰Â
+        // ç¾åœ¨ã€Idleã¾ãŸã¯Runã‚¹ãƒ†ãƒ¼ãƒˆã§ã‚ã‚Šã€ã‹ã¤åœ°é¢ã«ã„ã‚‹å ´åˆã®ã¿ã‚¸ãƒ£ãƒ³ãƒ—ã‚’è¨±å¯
         bool isGroundState = _stateMachine.CurrentState is Idle || _stateMachine.CurrentState is Run;
 
         if (CharacterController.isGrounded && isGroundState)
@@ -117,7 +121,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // ŠO•”‚©‚çƒXƒe[ƒg‚ğØ‚è‘Ö‚¦‚é‚½‚ß‚Ìƒwƒ‹ƒp[ƒƒ\ƒbƒh
+    // å¤–éƒ¨ã‹ã‚‰ã‚¹ãƒ†ãƒ¼ãƒˆã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹ãŸã‚ã®ãƒ˜ãƒ«ãƒ‘ãƒ¼ãƒ¡ã‚½ãƒƒãƒ‰
     public void SwitchState(PlayerStateKey key)
     {
         _stateMachine.SwitchState(key);
@@ -125,8 +129,8 @@ public class PlayerController : MonoBehaviour
 
     void OnDestroy()
     {
-        // –Y‚ê‚¸‚ÉInput System‚ğ–³Œø‰»iƒƒ‚ƒŠŠÇ—‚Ì‚½‚ß‚Éd—vIj
-        // w“Ç‰ğœ‚à‚±‚±‚Ås‚¤‚Ì‚ªˆÀ‘S
+        // å¿˜ã‚Œãšã«Input Systemã‚’ç„¡åŠ¹åŒ–ï¼ˆãƒ¡ãƒ¢ãƒªç®¡ç†ã®ãŸã‚ã«é‡è¦ï¼ï¼‰
+        // è³¼èª­è§£é™¤ã‚‚ã“ã“ã§è¡Œã†ã®ãŒå®‰å…¨
         InputHandler.Confirm.performed -= OnJumpInput;
 
         _inputActions.Dispose();

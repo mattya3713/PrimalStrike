@@ -14,7 +14,6 @@ namespace PlayerState // 名前空間を定義
 
         public void Enter()
         {
-            Debug.Log("State: Idleに入りました。");
         }
 
         public void Update()
@@ -37,7 +36,6 @@ namespace PlayerState // 名前空間を定義
 
         public void Exit()
         {
-            Debug.Log("State: Idleを抜けました。");
 
             // 購読解除（重要！）
             _owner.InputHandler.Confirm.performed -= OnConfirmInput;

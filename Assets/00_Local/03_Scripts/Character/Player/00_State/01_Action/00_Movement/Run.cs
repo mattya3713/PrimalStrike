@@ -13,7 +13,6 @@ namespace PlayerState // 名前空間を定義
 
         public void Enter()
         {
-            Debug.Log("State: Idleに入りました。");
             // イベント購読（InputHandlerは_ownerから取得）
         }
 
@@ -29,7 +28,6 @@ namespace PlayerState // 名前空間を定義
 
         public void Exit()
         {
-            Debug.Log("State: Idleを抜けました。");
             // イベント購読解除
         }
 
